@@ -1,0 +1,4 @@
+{ 
+    "http.port" : 8080,
+    "logging": "conf/log-dev.xml" 
+}

@@ -1,0 +1,108 @@
+//@wjw_note: 根据传进来的profile系统属性来打包.进入此模块目录执行: `..\gradlew clean :demo:build -x test -Dprofile=prod`
+//@wjw_note: 单jar运行: java -jar build\libs\org.wjw.vertx.rest.demo-1.0-SNAPSHOT--prod-fat.jar -Dprofile=prod
+plugins {
+  id 'java'
+  id 'application' 
+ 
+   //gradle的插件，shadow这个插件可以构建的时候把引用的jar包合进去
+  //加上此插件后会生成一个shadowJar的task
+  id "com.github.johnrengelman.shadow" version "7.0.0"
+}
+
+//@wjw_note: 根据传进来的profile系统属性来打包.
+def profileName = System.getProperty("profile") ?: "dev"
+//def profileName = System.getProperty("profile")
+if(profileName==null) {
+  throw new BuildCancelledException("must pass The environment variable 'profile'\r\n"
+                                   +"For example: gradlew clean build -x test -Dprofile=dev")
+}
+processResources {
+    include 'META-INF/services/**'
+    include '**/public/**'
+    include '**/static/**'
+    include '**/templates/**'
+    include '**/tpl/**'
+    include '**/i18n/**'
+    
+    include { FileTreeElement details ->
+        details.isDirectory()==true || details.file.name.contains("-${profileName}.")  /* 根据传入的profileName系统属性来过滤 */
+    }
+}
+
+group = "org.wjw.vertx.rest.demo"
+version = "1.0-SNAPSHOT--${profileName}"
+
+description = """Vertx rest demo"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+def rpcGeneratedSourcesDir = file("$projectDir/src/main/generated")
+
+sourceSets {
+  main {
+    java { srcDirs += [rpcGeneratedSourcesDir] }  // compile everything in src/ with groovy
+   }
+}
+
+compileJava {
+  options.annotationProcessorGeneratedSourcesDirectory = rpcGeneratedSourcesDir  //设定生成的RPC代理类存放的位置  
+}
+
+repositories {
+  mavenLocal()
+  maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }  //优先使用阿里的镜像
+  mavenCentral()
+}
+
+def vertxVersion = "4.2.7"
+
+def mainVerticleName = "org.wjw.vertx.rest.demo.MainVerticle"
+def launcherClassName = "io.vertx.core.Launcher"
+
+def watchForChange = "src/**/*"
+def doOnChange = "${projectDir}/gradlew classes"
+
+application {
+  mainClass = launcherClassName
+}
+
+dependencies {
+    implementation project(':core')
+  
+    implementation platform("io.vertx:vertx-stack-depchain:$vertxVersion")  //Vert.x Stack Depchain,集中了Vert.x的依赖版本管理,这样后面在导入Vert.x模块时就不必再填写版本号了!
+    implementation "io.vertx:vertx-core"
+    implementation "io.vertx:vertx-web"
+    implementation "io.vertx:vertx-config"
+
+    //RPC
+    implementation "io.vertx:vertx-codegen"
+    implementation "io.vertx:vertx-service-proxy"
+
+    annotationProcessor "io.vertx:vertx-codegen:${vertxVersion}:processor" 
+    annotationProcessor "io.vertx:vertx-service-proxy:${vertxVersion}"
+  
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'ch.qos.logback:logback-classic:1.2.10'
+}
+
+//@wjw_note(for fatjar):
+shadowJar {
+  archiveClassifier = "fat"
+  manifest {  //<--add
+    attributes "Main-Class": launcherClassName
+    attributes "Main-Verticle": mainVerticleName
+  }
+  
+  mergeServiceFiles()
+}
+
+run {
+  //@wjw_note需要终端交互的必须设置
+  setStandardInput System.in
+  setStandardOutput System.out
+  setErrorOutput System.err
+  
+  args = ["run", mainVerticleName, "--launcher-class=$launcherClassName", "-conf src/main/conf/conf.json", "--redeploy=$watchForChange", "--on-redeploy=$doOnChange"]
+}
