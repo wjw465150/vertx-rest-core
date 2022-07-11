@@ -1,24 +1,12 @@
 package org.wjw.vertx.rest.core.demo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.wjw.vertx.rest.core.util.VertxHolder;
-import org.wjw.vertx.rest.core.verticle.AsyncRegistryVerticle;
-import org.wjw.vertx.rest.core.verticle.RouterRegistryVerticle;
-
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.http.HttpServerOptions;
 
 /**
  * 一个使用`vertx-rest-core`模块的Main入口例子
  */
 public class AppMain {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(AppMain.class);
-
   public static void main(String[] args) {
     {//@wjw_note: 设置环境为开发环境,关闭文件缓存和模板缓存!
      //1. During development you might want to disable template caching so that the template gets reevaluated on each request. 
