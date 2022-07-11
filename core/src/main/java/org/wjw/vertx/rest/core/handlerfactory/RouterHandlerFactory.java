@@ -187,6 +187,9 @@ public class RouterHandlerFactory {
           if (routeUrl.startsWith("/")) {
             routeUrl = routeUrl.substring(1);
           }
+          if (routeUrl.endsWith("/")) {
+            routeUrl = routeUrl.substring(0, routeUrl.length() - 1);
+          }
         }
         String url;
         if (!root.endsWith("/")) {
@@ -230,6 +233,5 @@ public class RouterHandlerFactory {
       }
     }
   }
-  
-  
+
 }
