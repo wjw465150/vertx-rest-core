@@ -14,14 +14,14 @@
 <dependency>
  <groupId>com.github.wjw465150</groupId>
  <artifactId>vertx-rest-core</artifactId>
- <version>1.1.0</version>
+ <version>1.2.0</version>
 </dependency>
 ```
 
 - Gradle (在你的 `build.gradle`):
 
 ```groovy
-implementation 'com.github.wjw465150:vertx-rest-core:1.1.0'
+implementation 'com.github.wjw465150:vertx-rest-core:1.2.0'
 ```
 
 # 编写

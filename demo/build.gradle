@@ -29,6 +29,9 @@ processResources {
     }
 }
 
+// jar包的名字
+archivesBaseName = 'vertx-rest-demo'
+
 group = "org.wjw.vertx.rest.demo"
 version = "1.0-SNAPSHOT--${profileName}"
 
