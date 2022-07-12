@@ -141,15 +141,15 @@ dependencies {
     implementation platform("io.vertx:vertx-stack-depchain:$vertxVersion")  //Vert.x Stack Depchain,集中了Vert.x的依赖版本管理,这样后面在导入Vert.x模块时就不必再填写版本号了!
     
     //如果项目的Jar包要对外暴露，就用api
-    implementation "io.vertx:vertx-core"
-    implementation "io.vertx:vertx-web"
-    implementation "io.vertx:vertx-codegen"
-    implementation "io.vertx:vertx-service-proxy"
+    api "io.vertx:vertx-core"
+    api "io.vertx:vertx-web"
+    api "io.vertx:vertx-codegen"
+    api "io.vertx:vertx-service-proxy"
     
-    implementation "com.fasterxml.jackson.core:jackson-databind"
+    api "com.fasterxml.jackson.core:jackson-databind"
 
-    implementation "org.slf4j:slf4j-api:1.7.36"
-    implementation "org.reflections:reflections:0.10.2"
+    api "org.slf4j:slf4j-api:1.7.36"
+    api "org.reflections:reflections:0.10.2"
 }
 
 compileJava.dependsOn(processResources)
