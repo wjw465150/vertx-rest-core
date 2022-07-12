@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wjw.vertx.rest.core.util.AsyncServiceUtil;
 import org.wjw.vertx.rest.core.verticle.AsyncRegistryVerticle;
 import org.wjw.vertx.rest.core.verticle.RouterRegistryVerticle;
 
@@ -100,6 +101,7 @@ public class MainVerticle extends AbstractVerticle {
   
   @Override
   public void stop(Promise<Void> stopPromise) {
+    //
   }
   
 }

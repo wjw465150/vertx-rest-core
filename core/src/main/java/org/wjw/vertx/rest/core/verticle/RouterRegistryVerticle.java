@@ -3,6 +3,7 @@ package org.wjw.vertx.rest.core.verticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wjw.vertx.rest.core.handlerfactory.RouterHandlerFactory;
+import org.wjw.vertx.rest.core.util.AsyncServiceUtil;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
@@ -62,6 +63,8 @@ public class RouterRegistryVerticle extends AbstractVerticle {
 
   @Override
   public void stop(Promise<Void> stopPromise) {
+    AsyncServiceUtil.clearServices();
+
     if (server == null) {
       stopPromise.complete();
       return;
