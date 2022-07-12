@@ -43,7 +43,7 @@ public class RouterRegistryVerticle extends AbstractVerticle {
 
     try {
       // 根据routerScanPackages & gatewayPrefix 来创建Router的实例
-      Router router = new RouterHandlerFactory(routerScanPackages, gatewayPrefix).createRouter();
+      Router router = new RouterHandlerFactory(vertx,routerScanPackages, gatewayPrefix).createRouter();
 
       server = vertx.createHttpServer(httpOptions)
           .requestHandler(router)

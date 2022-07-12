@@ -25,20 +25,8 @@ public final class AsyncServiceUtil {
      * @param vertx the vertx
      * @return the async service instance
      */
-    public static <T> T getAsyncServiceInstance(Class<T> asClazz, Vertx vertx) {
+    public static <T> T getAsyncServiceInstance(Vertx vertx,Class<T> asClazz) {
         String address = asClazz.getName();
         return new ServiceProxyBuilder(vertx).setAddress(address).build(asClazz);
-    }
-
-    /**
-     * Gets the async service instance.
-     *
-     * @param <T> the generic type
-     * @param asClazz the as clazz
-     * @return the async service instance
-     */
-    public static <T> T getAsyncServiceInstance(Class<T> asClazz) {
-        String address = asClazz.getName();
-        return new ServiceProxyBuilder(VertxHolder.getVertxInstance()).setAddress(address).build(asClazz);
     }
 }

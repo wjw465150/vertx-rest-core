@@ -4,7 +4,6 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wjw.vertx.rest.core.util.VertxHolder;
 import org.wjw.vertx.rest.core.verticle.AsyncRegistryVerticle;
 import org.wjw.vertx.rest.core.verticle.RouterRegistryVerticle;
 
@@ -65,8 +64,6 @@ public class MainVerticle extends AbstractVerticle {
     //为了提高处理速度,可以在同一个地址上重复注册异步服务.其实内部就是在相同的EvenBus地址上添加了新的consumer!
     int asyncServiceInstances = 1;
 
-    //创建Vertx实例应该里面调用此方法老保存对Vertx实例的引用
-    VertxHolder.init(vertx);
     retriever.getConfig().onSuccess(confJson -> {
       {//@wjw_note: 加载log的配置文件!
         try {
@@ -87,12 +84,12 @@ public class MainVerticle extends AbstractVerticle {
       HttpServerOptions httpOptions = new HttpServerOptions();
       httpOptions.setPort(confJson.getInteger("http.port"));
 
-      Future<String> future = VertxHolder.getVertxInstance().deployVerticle(new RouterRegistryVerticle(httpOptions, routerScanPackages, confJson.getString("http.rootpath")));
+      Future<String> future = vertx.deployVerticle(new RouterRegistryVerticle(httpOptions, routerScanPackages, confJson.getString("http.rootpath")));
       future.onSuccess(s -> {
         logger.info("Start registry service....");
         for (int i = 0; i < asyncServiceInstances; i++) {
           //@wjw_note: 为了提高处理速度,可以在同一个地址上重复注册异步服务.其实内部就是在相同的EvenBus地址上添加了新的consumer!
-          VertxHolder.getVertxInstance().deployVerticle(new AsyncRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
+          vertx.deployVerticle(new AsyncRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
         }
       }).onFailure(ex -> {
         ex.printStackTrace();

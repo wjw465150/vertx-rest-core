@@ -16,8 +16,6 @@ import io.vertx.ext.web.RoutingContext;
 @RouteHandler(value = "SensorDataApi")
 public class SensorDataApi extends BaseRestApi {
 
-  private SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(SensorDataService.class);
-
   @RouteMapping(value = "/valueFor/:sensorId", method = RouteMethod.GET)
   public Handler<RoutingContext> valueFor() {
     return ctx -> {
@@ -25,6 +23,7 @@ public class SensorDataApi extends BaseRestApi {
       if (ParamUtil.isBlank(sensorId)) {
         sendError(400, ctx);
       } else {
+        SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(),SensorDataService.class);
         orderService.valueFor(sensorId, ar -> {
           if (ar.succeeded()) {
             JsonObject product = ar.result();
@@ -40,6 +39,7 @@ public class SensorDataApi extends BaseRestApi {
   @RouteMapping(value = "/average/", method = RouteMethod.GET)
   public Handler<RoutingContext> average() {
     return ctx -> {
+      SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(),SensorDataService.class);
       orderService.average(ar -> {
         if (ar.succeeded()) {
           JsonObject product = ar.result();

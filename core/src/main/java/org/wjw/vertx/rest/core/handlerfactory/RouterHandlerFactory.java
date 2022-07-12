@@ -28,9 +28,9 @@ import org.wjw.vertx.rest.core.annotaions.RouteMapping;
 import org.wjw.vertx.rest.core.annotaions.RouteMethod;
 import org.wjw.vertx.rest.core.util.ParamUtil;
 import org.wjw.vertx.rest.core.util.ReflectionUtil;
-import org.wjw.vertx.rest.core.util.VertxHolder;
 
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -55,13 +55,17 @@ public class RouterHandlerFactory {
 
   private volatile String gatewayPrefix = GATEWAY_PREFIX;
 
+  private final Vertx vertx;
+
   /**
    * Instantiates a new router handler factory.
    *
    * @param routerScanPackage the router scan package
    */
-  public RouterHandlerFactory(String routerScanPackage) {
+  public RouterHandlerFactory(Vertx vertx,String routerScanPackage) {
     Objects.requireNonNull(routerScanPackage, "The router package address scan is empty.");
+    
+    this.vertx = vertx;
     reflections = ReflectionUtil.getReflections(routerScanPackage);
   }
 
@@ -70,8 +74,10 @@ public class RouterHandlerFactory {
    *
    * @param routerScanPackages the router scan packages
    */
-  public RouterHandlerFactory(List<String> routerScanPackages) {
+  public RouterHandlerFactory(Vertx vertx,List<String> routerScanPackages) {
     Objects.requireNonNull(routerScanPackages, "The router package address scan is empty.");
+    
+    this.vertx = vertx;
     reflections = ReflectionUtil.getReflections(routerScanPackages);
   }
 
@@ -81,10 +87,12 @@ public class RouterHandlerFactory {
    * @param routerScanPackages the router scan packages
    * @param gatewayPrefix the gateway prefix
    */
-  public RouterHandlerFactory(String routerScanPackages, String gatewayPrefix) {
+  public RouterHandlerFactory(Vertx vertx,String routerScanPackages, String gatewayPrefix) {
     Objects.requireNonNull(routerScanPackages, "The router package address scan is empty.");
-    reflections = ReflectionUtil.getReflections(routerScanPackages);
+    
+    this.vertx = vertx;
     this.gatewayPrefix = gatewayPrefix;
+    reflections = ReflectionUtil.getReflections(routerScanPackages);
   }
 
   /**
@@ -93,7 +101,7 @@ public class RouterHandlerFactory {
    * @return the router
    */
   public Router createRouter() {
-    Router router = Router.router(VertxHolder.getVertxInstance());
+    Router router = Router.router(this.vertx);
     router.route().handler(ctx -> {
       LOGGER.debug("The HTTP service request address information ===>path:{}, uri:{}, method:{}",
           ctx.request().path(),
@@ -214,7 +222,7 @@ public class RouterHandlerFactory {
           case ROUTE:
             route = router.route(url);
             break;
-          case GET: // fall through
+          case GET: // fall through,注意后面都没有`break;`语句
             route = router.get(url);
           case OPTIONS:
             route = router.options(url);
