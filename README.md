@@ -14,14 +14,14 @@
 <dependency>
  <groupId>com.github.wjw465150</groupId>
  <artifactId>vertx-rest-core</artifactId>
- <version>1.0.0</version>
+ <version>1.1.0</version>
 </dependency>
 ```
 
 - Gradle (在你的 `build.gradle`):
 
 ```groovy
-implementation 'com.github.wjw465150:vertx-rest-core:1.0.0'
+implementation 'com.github.wjw465150:vertx-rest-core:1.1.0'
 ```
 
 # 编写
@@ -77,7 +77,7 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wjw.vertx.rest.core.verticle.AsyncRegistryVerticle;
+import org.wjw.vertx.rest.core.verticle.ServiceRegistryVerticle;
 import org.wjw.vertx.rest.core.verticle.RouterRegistryVerticle;
 
 import io.vertx.config.ConfigRetriever;
@@ -162,7 +162,7 @@ public class MainVerticle extends AbstractVerticle {
         logger.info("Start registry service....");
         for (int i = 0; i < asyncServiceInstances; i++) {
           //@wjw_note: 为了提高处理速度,可以在同一个地址上重复注册异步服务.其实内部就是在相同的EvenBus地址上添加了新的consumer!
-          vertx.deployVerticle(new AsyncRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
+          vertx.deployVerticle(new ServiceRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
         }
       }).onFailure(ex -> {
         ex.printStackTrace();
@@ -487,3 +487,4 @@ configuration 子节点为 appender、logger、root
 ------
 
 全部源代码在: https://github.com/wjw465150/vertx-rest-core
+

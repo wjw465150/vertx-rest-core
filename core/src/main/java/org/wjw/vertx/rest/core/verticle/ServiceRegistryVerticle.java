@@ -16,7 +16,7 @@ import io.vertx.serviceproxy.ServiceBinder;
 /**
  * 把异步服务注册到EventBus的Verticle.
  */
-public class AsyncRegistryVerticle extends AbstractVerticle {
+public class ServiceRegistryVerticle extends AbstractVerticle {
   /** The Constant LOGGER. */
   private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
@@ -28,7 +28,7 @@ public class AsyncRegistryVerticle extends AbstractVerticle {
    *
    * @param packageAddress the package address
    */
-  public AsyncRegistryVerticle(String packageAddress) {
+  public ServiceRegistryVerticle(String packageAddress) {
     Objects.requireNonNull(packageAddress, "given scan package address is empty");
     this.packageAddress = packageAddress;
   }
@@ -54,6 +54,7 @@ public class AsyncRegistryVerticle extends AbstractVerticle {
             Class  clazz                        = (Class) getAsyncInterfaceClassMethod.invoke(asInstance);
 
             binder.setAddress(address).register(clazz, asInstance);
+            LOGGER.info("Register New Service -> Address:`{}` Instance:`{}`",address,asInstance.getClass().getName());
           } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
             throw new java.lang.RuntimeException(e);

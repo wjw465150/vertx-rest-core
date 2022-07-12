@@ -32,7 +32,7 @@ public final class ParamUtil {
 
       JsonObject param = ctx.getBodyAsJson();
       if (param != null) {
-        LOGGER.debug("参数来源body,为JSON....");
+        LOGGER.info("参数来源body,为JSON....");
         Map<String, Object> paramMap = param.getMap();
         Iterator<String>    iterator = paramMap.keySet().iterator();
         while (iterator.hasNext()) {
@@ -61,7 +61,7 @@ public final class ParamUtil {
         }
       }
     } catch (Exception e) {
-      LOGGER.debug("请求body体中无参数!");
+      LOGGER.info("请求body体中无参数!");
     }
     return params;
   }

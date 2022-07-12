@@ -103,7 +103,7 @@ public class RouterHandlerFactory {
   public Router createRouter() {
     Router router = Router.router(this.vertx);
     router.route().handler(ctx -> {
-      LOGGER.debug("The HTTP service request address information ===>path:{}, uri:{}, method:{}",
+      LOGGER.info("The HTTP service request address information ===>path:{}, uri:{}, method:{}",
           ctx.request().path(),
           ctx.request().absoluteURI(),
           ctx.request().method());
@@ -195,9 +195,6 @@ public class RouterHandlerFactory {
           if (routeUrl.startsWith("/")) {
             routeUrl = routeUrl.substring(1);
           }
-          if (routeUrl.endsWith("/")) {
-            routeUrl = routeUrl.substring(0, routeUrl.length() - 1);
-          }
         }
         String url;
         if (!root.endsWith("/")) {
@@ -207,7 +204,7 @@ public class RouterHandlerFactory {
         }
         Handler<RoutingContext> methodHandler = (Handler<RoutingContext>) method.invoke(instance);
         String                  mineType      = mapping.mimeType();
-        LOGGER.debug("Register New Handler -> {}:{}:{}", routeMethod, url, mineType);
+        LOGGER.info("Register New Handler -> {}:{}:{}", routeMethod, url, mineType);
         Route route;
         switch (routeMethod) {
           case POST:

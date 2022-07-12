@@ -16,30 +16,37 @@ import io.vertx.ext.web.RoutingContext;
 @RouteHandler(value = "SensorDataApi")
 public class SensorDataApi extends BaseRestApi {
 
-  @RouteMapping(value = "/valueFor/:sensorId", method = RouteMethod.GET)
+  @RouteMapping(value = "/valueFor/:sensorId",
+                method = RouteMethod.GET)
   public Handler<RoutingContext> valueFor() {
-    return ctx -> {
-      String sensorId = ctx.pathParam("sensorId");
-      if (ParamUtil.isBlank(sensorId)) {
-        sendError(400, ctx);
-      } else {
-        SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(),SensorDataService.class);
-        orderService.valueFor(sensorId, ar -> {
-          if (ar.succeeded()) {
-            JsonObject product = ar.result();
-            fireJsonResponse(ctx, new JsonResult(product));
-          } else {
-            fireErrorJsonResponse(ctx, ar.cause().getMessage());
-          }
-        });
-      }
-    };
+    //方法引用的方式
+    return this::valueForHandler;
   }
 
-  @RouteMapping(value = "/average/", method = RouteMethod.GET)
+  private void valueForHandler(RoutingContext ctx) {
+    String sensorId = ctx.pathParam("sensorId");
+    if (ParamUtil.isBlank(sensorId)) {
+      sendError(400, ctx);
+    } else {
+      SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(), SensorDataService.class);
+
+      orderService.valueFor(sensorId, ar -> {
+        if (ar.succeeded()) {
+          JsonObject product = ar.result();
+          fireJsonResponse(ctx, new JsonResult(product));
+        } else {
+          fireErrorJsonResponse(ctx, ar.cause().getMessage());
+        }
+      });
+    }
+  }
+
+  @RouteMapping(value = "/average",
+                method = RouteMethod.GET)
   public Handler<RoutingContext> average() {
+    //lambda方式
     return ctx -> {
-      SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(),SensorDataService.class);
+      SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(), SensorDataService.class);
       orderService.average(ar -> {
         if (ar.succeeded()) {
           JsonObject product = ar.result();
