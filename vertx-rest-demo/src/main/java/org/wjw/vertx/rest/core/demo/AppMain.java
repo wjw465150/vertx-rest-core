@@ -1,5 +1,9 @@
 package org.wjw.vertx.rest.core.demo;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 
@@ -32,6 +36,42 @@ public class AppMain {
     //创建Vertx实例
     Vertx vertx = Vertx.vertx(options);
 
-    vertx.deployVerticle(new MainVerticle());
+    Future<String> deployFuture = vertx.deployVerticle(new MainVerticle());
+
+    deployFuture.onComplete(ar -> {
+      if (System.getProperties().getProperty("profile").equalsIgnoreCase("dev")) {
+        System.out.println("You're using Eclipse; click in this console and " + "input quit/exit to call System.exit() and run the shutdown routine.");
+
+        (new Thread(() -> {
+          boolean loopz = true;
+          try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+            while (loopz) {
+              String userInput = br.readLine();
+              System.out.println("input => " + userInput);
+              if (userInput.equalsIgnoreCase("quit") || userInput.equalsIgnoreCase("exit")) {
+                vertx.close().onComplete(v -> System.exit(0));
+              }
+            }
+          } catch (Exception er) {
+            er.printStackTrace();
+            loopz = false;
+          }
+        })).start();
+
+      }
+    });
+
+    //安全退出
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      public void run() {
+        System.out.println("Shutdown hook run.");
+        try {
+          vertx.close().onComplete(v -> System.out.println("Shutdown hook end."));
+        } catch (Exception e) {
+          //
+        }
+      }
+    });
+
   }
 }

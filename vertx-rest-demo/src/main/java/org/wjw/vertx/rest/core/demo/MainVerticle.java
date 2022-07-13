@@ -1,16 +1,19 @@
 package org.wjw.vertx.rest.core.demo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wjw.vertx.rest.core.verticle.ServiceRegistryVerticle;
 import org.wjw.vertx.rest.core.verticle.RouterRegistryVerticle;
+import org.wjw.vertx.rest.core.verticle.ServiceRegistryVerticle;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -23,7 +26,7 @@ public class MainVerticle extends AbstractVerticle {
   public MainVerticle() {
     logger = LoggerFactory.getLogger(this.getClass());
   }
-  
+
   @Override
   public void start(Promise<Void> startPromise) {
     String vertx_config_path;
@@ -32,7 +35,7 @@ public class MainVerticle extends AbstractVerticle {
       Properties sysProperties = System.getProperties();
       profile = sysProperties.getProperty("profile");
       if (profile == null) {
-        System.out.println("Please set 'profile'");
+        System.out.println("Please set 'profile' property");
         this.vertx.close();
         return;
       }
@@ -53,7 +56,7 @@ public class MainVerticle extends AbstractVerticle {
 
     ConfigRetrieverOptions configOptions = new ConfigRetrieverOptions().addStore(classpathStore);
     ConfigRetriever        retriever     = ConfigRetriever.create(vertx, configOptions);
-    
+
     //需要扫描有`@RouteHandler`注解的类的包路径列表(逗号分隔)
     String routerScanPackages = "org.wjw.vertx.rest.core.demo";
 
@@ -76,7 +79,7 @@ public class MainVerticle extends AbstractVerticle {
         }
       }
       logger.info("!!!!!!=================Vertx App profile:" + profile + "=================!!!!!!");
-      
+
       //部署Web Server的Vertivle和异步服务的Vertivcle
       logger.info("Start Deploy....");
 
@@ -84,23 +87,33 @@ public class MainVerticle extends AbstractVerticle {
       HttpServerOptions httpOptions = new HttpServerOptions();
       httpOptions.setPort(confJson.getInteger("http.port"));
 
-      Future<String> future = vertx.deployVerticle(new RouterRegistryVerticle(httpOptions, routerScanPackages, confJson.getString("http.rootpath")));
-      future.onSuccess(s -> {
+      Future<String> routerFuture = vertx.deployVerticle(new RouterRegistryVerticle(httpOptions, routerScanPackages, confJson.getString("http.rootpath")));
+      routerFuture.onSuccess(s -> {
         logger.info("Start registry service....");
+
+        List<Future> serviceFutures = new ArrayList<>();
         for (int i = 0; i < asyncServiceInstances; i++) {
           //@wjw_note: 为了提高处理速度,可以在同一个地址上重复注册异步服务.其实内部就是在相同的EvenBus地址上添加了新的consumer!
-          vertx.deployVerticle(new ServiceRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
+          Future<String> serviceFuture = vertx.deployVerticle(new ServiceRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
+          serviceFutures.add(serviceFuture);
         }
+
+        CompositeFuture.all(serviceFutures).onSuccess(it -> {
+          startPromise.complete();
+        }).onFailure(ex -> {
+          ex.printStackTrace();
+          startPromise.fail(ex);
+        });
       }).onFailure(ex -> {
         ex.printStackTrace();
-        vertx.close();
+        startPromise.fail(ex);
       });
     });
   }
-  
+
   @Override
   public void stop(Promise<Void> stopPromise) {
-    //
+    stopPromise.complete();
   }
-  
+
 }

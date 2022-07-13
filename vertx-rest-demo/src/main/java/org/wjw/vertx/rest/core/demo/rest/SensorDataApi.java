@@ -28,7 +28,7 @@ public class SensorDataApi extends BaseRestApi {
     if (ParamUtil.isBlank(sensorId)) {
       sendError(400, ctx);
     } else {
-      SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(), SensorDataService.class);
+      SensorDataService orderService = AsyncServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
 
       orderService.valueFor(sensorId, ar -> {
         if (ar.succeeded()) {
@@ -46,7 +46,7 @@ public class SensorDataApi extends BaseRestApi {
   public Handler<RoutingContext> average() {
     //lambda方式
     return ctx -> {
-      SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(), SensorDataService.class);
+      SensorDataService orderService = AsyncServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
       orderService.average(ar -> {
         if (ar.succeeded()) {
           JsonObject product = ar.result();

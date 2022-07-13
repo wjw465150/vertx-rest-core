@@ -15,26 +15,23 @@ public abstract class BaseAsyncService {
     /** The logger. */
     protected final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
-    public static final String method_getAddress="getAddress";
-    public static final String method_getAsyncInterfaceClass="getAsyncInterfaceClass";
-    
     /**
      * Gets the address.
      *
      * @return the address
      */
-    public String getAddress() {
+    public String getServiceAddress() {
         String className = this.getClass().getName();
         return className.substring(0, className.lastIndexOf("Impl")).replace(".impl", "");
     }
 
     /**
-     * Gets the async interface class.
+     * Gets the async service interface class.
      *
-     * @return the async interface class
+     * @return the async service interface class
      * @throws ClassNotFoundException the class not found exception
      */
-    public Class<?> getAsyncInterfaceClass() throws ClassNotFoundException {
+    public Class<?> getServiceInterfaceClass() throws ClassNotFoundException {
         String className = this.getClass().getName();
         return Class.forName(className.substring(0, className.lastIndexOf("Impl")).replace(".impl", ""));
     }

@@ -29,7 +29,7 @@ public final class AsyncServiceUtil {
    * @param vertx the vertx
    * @return the async service instance
    */
-  public static <T> T getAsyncServiceInstance(Vertx vertx, Class<T> asClazz) {
+  public static <T> T getServiceInstance(Vertx vertx, Class<T> asClazz) {
     String address = asClazz.getName();
     if (serviceMap.containsKey(address)) {
       return (T) serviceMap.get(address);

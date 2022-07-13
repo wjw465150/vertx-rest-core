@@ -7,6 +7,6 @@
  * in the user manual at https://docs.gradle.org/6.7.1/userguide/multi_project_builds.html
  */
 
-rootProject.name = 'vertx-rest-core'
-include('core')
-include('demo')
+rootProject.name = 'vertx-rest'
+include('vertx-rest-core')
+include('vertx-rest-demo')
