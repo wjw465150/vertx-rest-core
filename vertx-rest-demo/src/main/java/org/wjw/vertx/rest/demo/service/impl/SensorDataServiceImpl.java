@@ -1,7 +1,7 @@
-package org.wjw.vertx.rest.core.demo.service.impl;
+package org.wjw.vertx.rest.demo.service.impl;
 
-import org.wjw.vertx.rest.core.base.BaseAsyncService;
-import org.wjw.vertx.rest.core.demo.service.SensorDataService;
+import org.wjw.vertx.rest.core.annotaions.AsyncService;
+import org.wjw.vertx.rest.demo.service.SensorDataService;
 import org.wjw.vertx.rest.core.util.IdWorker;
 
 import io.vertx.core.AsyncResult;
@@ -9,7 +9,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
-public class SensorDataServiceImpl extends BaseAsyncService implements SensorDataService {
+@AsyncService(serviceInterface = SensorDataService.class)
+public class SensorDataServiceImpl implements SensorDataService {
 
   @Override
   public void valueFor(String sensorId, Handler<AsyncResult<JsonObject>> handler) {

@@ -14,39 +14,15 @@
 * under the License.
 */
 
-package org.wjw.vertx.rest.core.demo.service;
+package org.wjw.vertx.rest.demo.service;
 
-import org.wjw.vertx.rest.core.demo.service.SensorDataService;
 import io.vertx.core.Vertx;
-import io.vertx.core.Handler;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.eventbus.MessageConsumer;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.json.JsonArray;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import io.vertx.serviceproxy.HelperUtils;
 import io.vertx.serviceproxy.ProxyHandler;
 import io.vertx.serviceproxy.ServiceException;
 import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
-import io.vertx.serviceproxy.HelperUtils;
-import io.vertx.serviceproxy.ServiceBinder;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-/*
-  Generated Proxy code - DO NOT EDIT
-  @author Roger the Robot
-*/
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class SensorDataServiceVertxProxyHandler extends ProxyHandler {

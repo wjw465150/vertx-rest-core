@@ -1,6 +1,5 @@
 package org.wjw.vertx.rest.core.verticle;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -8,7 +7,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wjw.vertx.rest.core.base.BaseAsyncService;
+import org.wjw.vertx.rest.core.annotaions.AsyncService;
 import org.wjw.vertx.rest.core.util.ReflectionUtil;
 
 import io.vertx.core.AbstractVerticle;
@@ -50,18 +49,19 @@ public class ServiceRegistryVerticle extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) {
     try {
-      Set<Class<? extends BaseAsyncService>> serviceClasses = ReflectionUtil.getReflections(packageAddress).getSubTypesOf(BaseAsyncService.class);
+      Set<Class<?>> serviceClasses = ReflectionUtil.getReflections(packageAddress).getTypesAnnotatedWith(AsyncService.class);
       serviceBinder = new ServiceBinder(vertx);
       if (null != serviceClasses && serviceClasses.size() > 0) {
         serviceClasses.forEach(serviceClass -> {
           try {
-            BaseAsyncService serviceInstance  = serviceClass.newInstance();
-            String           address          = serviceInstance.getServiceAddress();
-            Class            serviceInterfaceClazz = serviceInstance.getServiceInterfaceClass();
+            AsyncService annoservice = serviceClass.getAnnotation(AsyncService.class);
+            Class serviceInterface = annoservice.serviceInterface();
+            String serviceAddress = serviceInterface.getName();
+            Object serviceInstance  = serviceClass.newInstance();
 
-            MessageConsumer<JsonObject> consumer = serviceBinder.setAddress(address).register(serviceInterfaceClazz, serviceInstance);
+            MessageConsumer<JsonObject> consumer = serviceBinder.setAddress(serviceAddress).register(serviceInterface, serviceInstance);
             serviceList.add(consumer);
-            LOGGER.info("Register New Service -> Address:`{}` Instance:`{}`", address, serviceInstance.getClass().getName());
+            LOGGER.info("Register New Service -> Address:`{}` Instance:`{}`", serviceAddress, serviceInstance.getClass().getName());
           } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
             throw new java.lang.RuntimeException(e);

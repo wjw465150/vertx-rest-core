@@ -12,7 +12,7 @@ apply from: rootDir.canonicalPath + '/.gradle/publish.gradle'
 archivesBaseName = 'vertx-rest-core'
 
 group = 'com.github.wjw465150'  //Sonatype上的Issue里填写的`Group Id`,可以跟package路径完全不一样
-version = '1.2.0'
+version = '2.0.0'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'

@@ -14,14 +14,14 @@
 <dependency>
  <groupId>com.github.wjw465150</groupId>
  <artifactId>vertx-rest-core</artifactId>
- <version>1.2.0</version>
+ <version>2.0.0</version>
 </dependency>
 ```
 
 - Gradle (在你的 `build.gradle`):
 
 ```groovy
-implementation 'com.github.wjw465150:vertx-rest-core:1.2.0'
+implementation 'com.github.wjw465150:vertx-rest-core:2.0.0'
 ```
 
 # 编写
@@ -29,39 +29,17 @@ implementation 'com.github.wjw465150:vertx-rest-core:1.2.0'
 ## 程序入口类(测试时候用)
 
 ```java
-package org.wjw.vertx.rest.core.demo;
+package org.wjw.vertx.rest.demo;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 
 /**
  * 一个使用`vertx-rest-core`模块的Main入口例子
  */
 public class AppMain {
   public static void main(String[] args) {
-    {//@wjw_note: 设置环境为开发环境,关闭文件缓存和模板缓存!
-     //1. During development you might want to disable template caching so that the template gets reevaluated on each request. 
-     //In order to do this you need to set the system property: vertxweb.environment or environment variable VERTXWEB_ENVIRONMENT to dev or development. 
-     //By default caching is always enabled.
-
-      //2. these system properties are evaluated once when the io.vertx.core.file.FileSystemOptions class is loaded, 
-      //so these properties should be set before loading this class or as a JVM system property when launching it.
-
-      System.setProperty("vertxweb.environment", "dev");
-      //@wjw_note: 调试发现,当有众多的小js,css文件时,,Vertx总是用原始源刷新缓存中存储的版本,严重影响性能      
-      System.setProperty("vertx.disableFileCaching", "true");
-    }
-
-    //防止调试的时候出现`BlockedThreadChecker`日志信息
-    VertxOptions options                    = new VertxOptions();
-    long         blockedThreadCheckInterval = 60 * 60 * 1000L;
-    if (System.getProperties().getProperty("vertx.options.blockedThreadCheckInterval") != null) {
-      blockedThreadCheckInterval = Long.valueOf(System.getProperties().getProperty("vertx.options.blockedThreadCheckInterval"));
-    }
-    options.setBlockedThreadCheckInterval(blockedThreadCheckInterval);
-
     //创建Vertx实例
-    Vertx vertx = Vertx.vertx(options);
+    Vertx vertx = Vertx.vertx();
 
     vertx.deployVerticle(new MainVerticle());
   }
@@ -71,19 +49,22 @@ public class AppMain {
 ## 主Verticle类
 
 ```java
-package org.wjw.vertx.rest.core.demo;
+package org.wjw.vertx.rest.demo;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wjw.vertx.rest.core.verticle.ServiceRegistryVerticle;
 import org.wjw.vertx.rest.core.verticle.RouterRegistryVerticle;
+import org.wjw.vertx.rest.core.verticle.ServiceRegistryVerticle;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -96,7 +77,7 @@ public class MainVerticle extends AbstractVerticle {
   public MainVerticle() {
     logger = LoggerFactory.getLogger(this.getClass());
   }
-  
+
   @Override
   public void start(Promise<Void> startPromise) {
     String vertx_config_path;
@@ -105,7 +86,7 @@ public class MainVerticle extends AbstractVerticle {
       Properties sysProperties = System.getProperties();
       profile = sysProperties.getProperty("profile");
       if (profile == null) {
-        System.out.println("Please set 'profile'");
+        System.out.println("Please set 'profile' property");
         this.vertx.close();
         return;
       }
@@ -126,12 +107,12 @@ public class MainVerticle extends AbstractVerticle {
 
     ConfigRetrieverOptions configOptions = new ConfigRetrieverOptions().addStore(classpathStore);
     ConfigRetriever        retriever     = ConfigRetriever.create(vertx, configOptions);
-    
+
     //需要扫描有`@RouteHandler`注解的类的包路径列表(逗号分隔)
-    String routerScanPackages = "org.wjw.vertx.rest.core.demo";
+    String routerScanPackages = "org.wjw.vertx.rest.demo.rest";
 
     //需要扫描的扩展了`org.wjw.vertx.rest.core.demo.base.BaseAsyncService`的抽象类的包路径列表(逗号分隔)
-    String asyncServiceScanPackages = "org.wjw.vertx.rest.core.demo";
+    String asyncServiceScanPackages = "org.wjw.vertx.rest.demo.service";
 
     // 异步服务的实例个数
     //为了提高处理速度,可以在同一个地址上重复注册异步服务.其实内部就是在相同的EvenBus地址上添加了新的consumer!
@@ -149,7 +130,7 @@ public class MainVerticle extends AbstractVerticle {
         }
       }
       logger.info("!!!!!!=================Vertx App profile:" + profile + "=================!!!!!!");
-      
+
       //部署Web Server的Vertivle和异步服务的Vertivcle
       logger.info("Start Deploy....");
 
@@ -157,32 +138,42 @@ public class MainVerticle extends AbstractVerticle {
       HttpServerOptions httpOptions = new HttpServerOptions();
       httpOptions.setPort(confJson.getInteger("http.port"));
 
-      Future<String> future = vertx.deployVerticle(new RouterRegistryVerticle(httpOptions, routerScanPackages, confJson.getString("http.rootpath")));
-      future.onSuccess(s -> {
+      Future<String> routerFuture = vertx.deployVerticle(new RouterRegistryVerticle(httpOptions, routerScanPackages, confJson.getString("http.rootpath")));
+      routerFuture.onSuccess(s -> {
         logger.info("Start registry service....");
+
+        List<Future> serviceFutures = new ArrayList<>();
         for (int i = 0; i < asyncServiceInstances; i++) {
           //@wjw_note: 为了提高处理速度,可以在同一个地址上重复注册异步服务.其实内部就是在相同的EvenBus地址上添加了新的consumer!
-          vertx.deployVerticle(new ServiceRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
+          Future<String> serviceFuture = vertx.deployVerticle(new ServiceRegistryVerticle(asyncServiceScanPackages), new DeploymentOptions().setWorker(true));
+          serviceFutures.add(serviceFuture);
         }
+
+        CompositeFuture.all(serviceFutures).onSuccess(it -> {
+          startPromise.complete();
+        }).onFailure(ex -> {
+          ex.printStackTrace();
+          startPromise.fail(ex);
+        });
       }).onFailure(ex -> {
         ex.printStackTrace();
-        vertx.close();
+        startPromise.fail(ex);
       });
     });
   }
-  
+
   @Override
   public void stop(Promise<Void> stopPromise) {
-    //
+    stopPromise.complete();
   }
-  
+
 }
 ```
 
 ## 异步服务接口
 
 ```java
-package org.wjw.vertx.rest.core.demo.service;
+package org.wjw.vertx.rest.demo.service;
 
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;
@@ -200,10 +191,10 @@ public interface SensorDataService {
 ## 异步服务实现类
 
 ```java
-package org.wjw.vertx.rest.core.demo.service.impl;
+package org.wjw.vertx.rest.demo.service.impl;
 
-import org.wjw.vertx.rest.core.base.BaseAsyncService;
-import org.wjw.vertx.rest.core.demo.service.SensorDataService;
+import org.wjw.vertx.rest.core.annotaions.AsyncService;
+import org.wjw.vertx.rest.demo.service.SensorDataService;
 import org.wjw.vertx.rest.core.util.IdWorker;
 
 import io.vertx.core.AsyncResult;
@@ -211,7 +202,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
-public class SensorDataServiceImpl extends BaseAsyncService implements SensorDataService {
+@AsyncService(serviceInterface = SensorDataService.class)
+public class SensorDataServiceImpl implements SensorDataService {
 
   @Override
   public void valueFor(String sensorId, Handler<AsyncResult<JsonObject>> handler) {
@@ -232,57 +224,67 @@ public class SensorDataServiceImpl extends BaseAsyncService implements SensorDat
 }
 ```
 
+> `@AsyncService` 注解里的serviceInterface要指定实现了哪个接口
+
 ## REST类
 
 ```java
-package org.wjw.vertx.rest.core.demo.rest;
+package org.wjw.vertx.rest.demo.rest;
 
 import org.wjw.vertx.rest.core.annotaions.RouteHandler;
 import org.wjw.vertx.rest.core.annotaions.RouteMapping;
 import org.wjw.vertx.rest.core.annotaions.RouteMethod;
-import org.wjw.vertx.rest.core.base.BaseRestApi;
-import org.wjw.vertx.rest.core.demo.service.SensorDataService;
 import org.wjw.vertx.rest.core.model.JsonResult;
-import org.wjw.vertx.rest.core.util.AsyncServiceUtil;
+import org.wjw.vertx.rest.core.util.ServiceUtil;
 import org.wjw.vertx.rest.core.util.ParamUtil;
+import org.wjw.vertx.rest.core.util.RestApiUtil;
+
+import org.wjw.vertx.rest.demo.service.SensorDataService;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 @RouteHandler(value = "SensorDataApi")
-public class SensorDataApi extends BaseRestApi {
+public class SensorDataApi {
 
-  @RouteMapping(value = "/valueFor/:sensorId", method = RouteMethod.GET)
+  @RouteMapping(value = "/valueFor/:sensorId",
+                method = RouteMethod.GET)
   public Handler<RoutingContext> valueFor() {
-    return ctx -> {
-      String sensorId = ctx.pathParam("sensorId");
-      if (ParamUtil.isBlank(sensorId)) {
-        sendError(400, ctx);
-      } else {
-        SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(),SensorDataService.class);
-        orderService.valueFor(sensorId, ar -> {
-          if (ar.succeeded()) {
-            JsonObject product = ar.result();
-            fireJsonResponse(ctx, new JsonResult(product));
-          } else {
-            fireErrorJsonResponse(ctx, ar.cause().getMessage());
-          }
-        });
-      }
-    };
+    //方法引用的方式
+    return this::valueForHandler;
   }
 
-  @RouteMapping(value = "/average/", method = RouteMethod.GET)
+  private void valueForHandler(RoutingContext ctx) {
+    String sensorId = ctx.pathParam("sensorId");
+    if (ParamUtil.isBlank(sensorId)) {
+      RestApiUtil.sendError(400, ctx);
+    } else {
+      SensorDataService orderService = ServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
+
+      orderService.valueFor(sensorId, ar -> {
+        if (ar.succeeded()) {
+          JsonObject product = ar.result();
+          RestApiUtil.fireJsonResponse(ctx, new JsonResult(product));
+        } else {
+          RestApiUtil.fireErrorJsonResponse(ctx, ar.cause().getMessage());
+        }
+      });
+    }
+  }
+
+  @RouteMapping(value = "/average",
+                method = RouteMethod.GET)
   public Handler<RoutingContext> average() {
+    //lambda方式
     return ctx -> {
-      SensorDataService orderService = AsyncServiceUtil.getAsyncServiceInstance(ctx.vertx(),SensorDataService.class);
+      SensorDataService orderService = ServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
       orderService.average(ar -> {
         if (ar.succeeded()) {
           JsonObject product = ar.result();
-          fireJsonResponse(ctx, new JsonResult(product));
+          RestApiUtil.fireJsonResponse(ctx, new JsonResult(product));
         } else {
-          fireErrorJsonResponse(ctx, ar.cause().getMessage());
+          RestApiUtil.fireErrorJsonResponse(ctx, ar.cause().getMessage());
         }
       });
     };
@@ -290,6 +292,10 @@ public class SensorDataApi extends BaseRestApi {
 
 }
 ```
+
+> `@RouteHandle` 注解加到类上
+>
+> `@RouteMapping` 注解加到方法上
 
 ## 配置文件
 
@@ -415,48 +421,6 @@ configuration 子节点为 appender、logger、root
     </encoder>
   </appender>
 
-  <!--  LOGSTASH -->
-  <![CDATA[
-  <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-        <level>INFO</level>
-    </filter>
-      
-    <!--  这是是logstash服务器地址 端口-->
-    <destination>127.0.0.1:4567</destination>
-    <!-- 可以连接多个LogStash
-    <destination>destination1.domain.com:4560</destination> 
-    <destination>destination2.domain.com:4560</destination> 
-    <destination>destination3.domain.com:4560</destination>
-    -->
-    <connectionStrategy>  <!-- 连接策略  -->
-      <roundRobin>  <!-- 轮询 -->
-        <connectionTTL>5 minutes</connectionTTL>
-      </roundRobin>
-    </connectionStrategy>      
-      
-    <!-- encoder必须配置,有多种可选 -->
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder" charset="UTF-8">
-      <customFields>{"appname":"Erupt-MtConsole"}</customFields>  <!-- 添加一个自定义字段"appname",表明应用的名字来方便查询 -->
-    </encoder>
-  </appender>
-  ]]>
-    
-  <!--myibatis log configure -->
-  <logger name="com.apache.ibatis" level="TRACE" />
-  <logger name="java.sql.Connection" level="DEBUG" />
-  <logger name="java.sql.Statement" level="DEBUG" />
-  <logger name="java.sql.PreparedStatement" level="DEBUG" />
-
-  <!--hibernate log configure -->
-  <logger name="org.hibernate.SQL" level="DEBUG" />  <!-- 输出生成的SQL语句 -->
-  <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" />  <!-- 输出绑定参数值 -->
-  <![CDATA[
-  <logger name="org.hibernate.type.descriptor.sql.BasicExtractor" level="TRACE" />  <!-- 输出SELECT中获取的值 -->
-  ]]>
-  <logger name="org.hibernate.engine.QueryParameters" level="DEBUG" />  <!-- 输出查询中命名参数的值 -->
-  <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG" />  <!-- 输出查询中命名参数的值 -->
-
   <!-- 日志输出级别 -->
   <root level="INFO">
     <appender-ref ref="STDOUT" />
@@ -465,8 +429,6 @@ configuration 子节点为 appender、logger、root
     <appender-ref ref="FILE-INFO" />
     <appender-ref ref="FILE-WARN" />
     <appender-ref ref="FILE-ERROR" />
-    
-    <!-- <appender-ref ref="LOGSTASH" />  -->
   </root>
   
 </configuration>

@@ -1,4 +1,4 @@
-package org.wjw.vertx.rest.core.demo;
+package org.wjw.vertx.rest.demo;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

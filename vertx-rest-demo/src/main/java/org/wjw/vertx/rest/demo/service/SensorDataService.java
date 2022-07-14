@@ -1,4 +1,4 @@
-package org.wjw.vertx.rest.core.demo.service;
+package org.wjw.vertx.rest.demo.service;
 
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.core.AsyncResult;

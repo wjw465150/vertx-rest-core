@@ -1,20 +1,21 @@
-package org.wjw.vertx.rest.core.demo.rest;
+package org.wjw.vertx.rest.demo.rest;
 
 import org.wjw.vertx.rest.core.annotaions.RouteHandler;
 import org.wjw.vertx.rest.core.annotaions.RouteMapping;
 import org.wjw.vertx.rest.core.annotaions.RouteMethod;
-import org.wjw.vertx.rest.core.base.BaseRestApi;
-import org.wjw.vertx.rest.core.demo.service.SensorDataService;
 import org.wjw.vertx.rest.core.model.JsonResult;
-import org.wjw.vertx.rest.core.util.AsyncServiceUtil;
+import org.wjw.vertx.rest.core.util.ServiceUtil;
 import org.wjw.vertx.rest.core.util.ParamUtil;
+import org.wjw.vertx.rest.core.util.RestApiUtil;
+
+import org.wjw.vertx.rest.demo.service.SensorDataService;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 @RouteHandler(value = "SensorDataApi")
-public class SensorDataApi extends BaseRestApi {
+public class SensorDataApi {
 
   @RouteMapping(value = "/valueFor/:sensorId",
                 method = RouteMethod.GET)
@@ -26,16 +27,16 @@ public class SensorDataApi extends BaseRestApi {
   private void valueForHandler(RoutingContext ctx) {
     String sensorId = ctx.pathParam("sensorId");
     if (ParamUtil.isBlank(sensorId)) {
-      sendError(400, ctx);
+      RestApiUtil.sendError(400, ctx);
     } else {
-      SensorDataService orderService = AsyncServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
+      SensorDataService orderService = ServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
 
       orderService.valueFor(sensorId, ar -> {
         if (ar.succeeded()) {
           JsonObject product = ar.result();
-          fireJsonResponse(ctx, new JsonResult(product));
+          RestApiUtil.fireJsonResponse(ctx, new JsonResult(product));
         } else {
-          fireErrorJsonResponse(ctx, ar.cause().getMessage());
+          RestApiUtil.fireErrorJsonResponse(ctx, ar.cause().getMessage());
         }
       });
     }
@@ -46,13 +47,13 @@ public class SensorDataApi extends BaseRestApi {
   public Handler<RoutingContext> average() {
     //lambda方式
     return ctx -> {
-      SensorDataService orderService = AsyncServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
+      SensorDataService orderService = ServiceUtil.getServiceInstance(ctx.vertx(), SensorDataService.class);
       orderService.average(ar -> {
         if (ar.succeeded()) {
           JsonObject product = ar.result();
-          fireJsonResponse(ctx, new JsonResult(product));
+          RestApiUtil.fireJsonResponse(ctx, new JsonResult(product));
         } else {
-          fireErrorJsonResponse(ctx, ar.cause().getMessage());
+          RestApiUtil.fireErrorJsonResponse(ctx, ar.cause().getMessage());
         }
       });
     };
