@@ -111,7 +111,7 @@ public class MainVerticle extends AbstractVerticle {
     //需要扫描有`@RouteHandler`注解的类的包路径列表(逗号分隔)
     String routerScanPackages = "org.wjw.vertx.rest.demo.rest";
 
-    //需要扫描的扩展了`org.wjw.vertx.rest.core.demo.base.BaseAsyncService`的抽象类的包路径列表(逗号分隔)
+    //需要扫描有`@AsyncService`注解的类的包路径列表(逗号分隔)
     String asyncServiceScanPackages = "org.wjw.vertx.rest.demo.service";
 
     // 异步服务的实例个数
@@ -332,6 +332,11 @@ configuration 子节点为 appender、logger、root
   
   <!-- 输出控制台的所有信息到日志文件里 -->
   <appender name="FILE-ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ALL</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>ACCEPT</onMismatch>
+    </filter>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <!-- rollover daily -->
       <fileNamePattern>${LOG_DIR}/all_dev_%d{yyyy-MM-dd}_%i.log</fileNamePattern>

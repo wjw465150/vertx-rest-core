@@ -60,7 +60,7 @@ public class MainVerticle extends AbstractVerticle {
     //需要扫描有`@RouteHandler`注解的类的包路径列表(逗号分隔)
     String routerScanPackages = "org.wjw.vertx.rest.demo.rest";
 
-    //需要扫描的扩展了`org.wjw.vertx.rest.core.demo.base.BaseAsyncService`的抽象类的包路径列表(逗号分隔)
+    //需要扫描有`@AsyncService`注解的类的包路径列表(逗号分隔)
     String asyncServiceScanPackages = "org.wjw.vertx.rest.demo.service";
 
     // 异步服务的实例个数
