@@ -59,7 +59,7 @@ repositories {
   mavenCentral()
 }
 
-def vertxVersion = "4.2.7"
+def vertxVersion = "4.3.3"
 
 def mainVerticleName = "org.wjw.vertx.rest.demo.MainVerticle"
 def launcherClassName = "io.vertx.core.Launcher"

@@ -18,6 +18,11 @@ configuration 子节点为 appender、logger、root
   
   <!-- 输出控制台的所有信息到日志文件里 -->
   <appender name="FILE-ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ALL</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>ACCEPT</onMismatch>
+    </filter>
     <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
       <!-- rollover daily -->
       <fileNamePattern>${LOG_DIR}/all_dev_%d{yyyy-MM-dd}_%i.log</fileNamePattern>

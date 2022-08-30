@@ -30,7 +30,7 @@ public final class ParamUtil {
       //            params.put("serverIp", ctx.request().localAddress().host());
       //            params.put("clientIp", ctx.request().remoteAddress().host());
 
-      JsonObject param = ctx.getBodyAsJson();
+      JsonObject param = ctx.body().asJsonObject();
       if (param != null) {
         LOGGER.info("参数来源body,为JSON....");
         Map<String, Object> paramMap = param.getMap();

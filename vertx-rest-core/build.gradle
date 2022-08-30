@@ -135,7 +135,7 @@ repositories {
   mavenCentral()
 }
 
-def vertxVersion = "4.2.7"
+def vertxVersion = "4.3.3"
 
 dependencies {
     implementation platform("io.vertx:vertx-stack-depchain:$vertxVersion")  //Vert.x Stack Depchain,集中了Vert.x的依赖版本管理,这样后面在导入Vert.x模块时就不必再填写版本号了!
