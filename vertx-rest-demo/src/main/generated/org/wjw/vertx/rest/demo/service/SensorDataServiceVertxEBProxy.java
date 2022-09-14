@@ -16,18 +16,28 @@
 
 package org.wjw.vertx.rest.demo.service;
 
-import io.vertx.core.AsyncResult;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.Vertx;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.function.Function;
+import io.vertx.serviceproxy.ServiceException;
+import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
+import io.vertx.serviceproxy.ProxyUtils;
+
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 /*
   Generated Proxy code - DO NOT EDIT
   @author Roger the Robot
 */
-import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.json.JsonObject;
-import io.vertx.serviceproxy.ServiceException;
-import io.vertx.serviceproxy.ServiceExceptionMessageCodec;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class SensorDataServiceVertxEBProxy implements SensorDataService {
@@ -61,6 +71,7 @@ public class SensorDataServiceVertxEBProxy implements SensorDataService {
 
     DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
     _deliveryOptions.addHeader("action", "valueFor");
+    _deliveryOptions.getHeaders().set("action", "valueFor");
     _vertx.eventBus().<JsonObject>request(_address, _json, _deliveryOptions, res -> {
       if (res.failed()) {
         handler.handle(Future.failedFuture(res.cause()));
@@ -79,6 +90,7 @@ public class SensorDataServiceVertxEBProxy implements SensorDataService {
 
     DeliveryOptions _deliveryOptions = (_options != null) ? new DeliveryOptions(_options) : new DeliveryOptions();
     _deliveryOptions.addHeader("action", "average");
+    _deliveryOptions.getHeaders().set("action", "average");
     _vertx.eventBus().<JsonObject>request(_address, _json, _deliveryOptions, res -> {
       if (res.failed()) {
         handler.handle(Future.failedFuture(res.cause()));

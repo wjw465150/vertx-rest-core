@@ -49,6 +49,46 @@ sourceSets {
    }
 }
 
+
+//单独运行 ServiceProxy CodeGenerator 的APT来生成`VertxEBProxy`源代码
+task runGenerator(type: JavaCompile) {
+  doFirst {
+    /*
+     * This is a workaround to delete the file that will be created by the annotation processor if it already exists.
+     * There is a known bug in the Java compiler and JDK 8 which should be fixed at JDK 9.
+     * http://bugs.java.com/bugdatabase/view_bug.do?bug_id=8067747 <-- Master report
+     * http://bugs.java.com/bugdatabase/view_bug.do?bug_id=8146348 <-- duplicates master report
+     */
+    if ( rpcGeneratedSourcesDir.exists() ) {
+      FileCollection collection = files { rpcGeneratedSourcesDir.listFiles() }
+      collection.each { delete it }
+    }
+    
+    rpcGeneratedSourcesDir.mkdirs()
+    
+    println "classpath:"+classpath.getFiles()
+    println "Generate VertxEBProxy Class..."
+    println "options:"+options
+    println "options.compilerArgs:"+options.compilerArgs
+
+    println "AnnotationProcessorPath for $name is ${options.getAnnotationProcessorPath().getFiles()}"
+  }
+
+  source = sourceSets.main.java.srcDirs
+  destinationDir = sourceSets.main.java.outputDir
+  
+  classpath = configurations.compileClasspath + configurations.annotationProcessor
+  options.annotationProcessorPath = classpath  //@wjw_note: 设置这个annotationProcessorPath很关键
+  
+  options.encoding = 'UTF-8'
+  options.deprecation = true
+  options.compilerArgs += ["-parameters","-Xlint:deprecation"]
+  
+  options.compilerArgs += ['-proc:only']
+  options.compilerArgs += ['-processor', 'io.vertx.codegen.CodeGenProcessor']
+  options.compilerArgs += ['-s', rpcGeneratedSourcesDir]  //设定生成的RPC代理类存放的位置
+}
+
 compileJava {
   options.annotationProcessorGeneratedSourcesDirectory = rpcGeneratedSourcesDir  //设定生成的RPC代理类存放的位置  
 }
